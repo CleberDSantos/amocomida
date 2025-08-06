@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Estoque de Ingredientes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="addItem()">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark">
+  <ion-segment [(ngModel)]="selectedCategory" color="primary">
+    <ion-segment-button value="all">
+      <ion-label>Todos</ion-label>
+    </ion-segment-button>
+    <ion-segment-button *ngFor="let cat of categories" [value]="cat">
+      <ion-label>{{ cat }}</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <ion-list>
+    <ion-item *ngFor="let item of stockItems"
+              [hidden]="selectedCategory !== 'all' && item.category !== selectedCategory"
+              color="dark"
+              routerLink="/ingredient-detail/{{item.id}}">
+      <ion-label>
+        <h2>{{ item.name }}</h2>
+        <p>{{ item.category }}</p>
+      </ion-label>
+      <ion-note slot="end" [color]="item.quantity < item.minQuantity ? 'danger' : 'success'">
+        {{ item.quantity }} {{ item.unit }}
+      </ion-note>
+    </ion-item>
+  </ion-list>
+</ion-content>

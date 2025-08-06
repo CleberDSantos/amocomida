@@ -1,16 +1,46 @@
-import { NgModule } from '@angular/core';
-import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 
 const routes: Routes = [
   {
+    path: 'tabs',
+    loadComponent: () => import('./tabs/tabs.page').then(m => m.TabsPage),
+    children: [
+      {
+        path: 'home',
+        loadComponent: () => import('./pages/home/home.page').then(m => m.HomePage)
+      },
+      {
+        path: 'recipes',
+        loadComponent: () => import('./pages/recipes/recipes.page').then(m => m.RecipesPage)
+      },
+      {
+        path: 'shopping-list',
+        loadComponent: () => import('./pages/shopping-list/shopping-list.page').then(m => m.ShoppingListPage)
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings/settings.page').then(m => m.SettingsPage)
+      },
+      {
+        path: '',
+        redirectTo: '/tabs/home',
+        pathMatch: 'full'
+      }
+    ]
+  },
+  {
+    path: 'recipe-detail/:id',
+    loadComponent: () => import('./pages/recipe-detail/recipe-detail.page').then(m => m.RecipeDetailPage)
+  },
+  {
+    path: 'ingredient-detail/:id',
+    loadComponent: () => import('./pages/ingredient-detail/ingredient-detail.page').then(m => m.IngredientDetailPage)
+  },
+  {
     path: '',
-    loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsPageModule)
+    redirectTo: '/tabs/home',
+    pathMatch: 'full'
   }
 ];
-@NgModule({
-  imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
-  ],
-  exports: [RouterModule]
-})
-export class AppRoutingModule {}
+
+export { routes };

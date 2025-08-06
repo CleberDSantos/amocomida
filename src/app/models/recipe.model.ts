@@ -1,0 +1,20 @@
+export interface Recipe {
+  id: string;
+  name: string;
+  description: string;
+  image?: string;
+  ingredients: Ingredient[];
+  portions: number;
+  portionSize: number; // em gramas
+  createdAt: Date;
+  notes: string;
+  preparedAt?: Date; // Data em que foi preparada (para o feed)
+}
+
+export interface Ingredient {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  cost: number; // custo unitário
+}

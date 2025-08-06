@@ -1,0 +1,45 @@
+<!-- src/app/pages/stock-control/stock-control.page.html -->
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Controle de Estoque</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="generateShoppingList()">
+        <ion-icon name="cart"></ion-icon>
+        Gerar Lista
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark">
+  <ion-segment [(ngModel)]="selectedCategory" color="primary">
+    <ion-segment-button value="all">
+      <ion-label>Todos</ion-label>
+    </ion-segment-button>
+    <ion-segment-button *ngFor="let cat of categories" [value]="cat">
+      <ion-label>{{ cat }}</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <ion-list>
+    <ion-item *ngFor="let item of stockItems"
+              [hidden]="selectedCategory !== 'all' && item.category !== selectedCategory"
+              color="dark">
+      <ion-label>
+        <h2>{{ item.name }}</h2>
+        <p>{{ item.category }}</p>
+      </ion-label>
+      <ion-input type="number" [(ngModel)]="item.quantity" (ionBlur)="updateItem(item)"></ion-input>
+      <ion-note slot="end">{{ item.unit }}</ion-note>
+      <ion-note slot="end" [color]="item.quantity < item.minQuantity ? 'danger' : 'success'">
+        Min: {{ item.minQuantity }}
+      </ion-note>
+    </ion-item>
+  </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="addItem()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

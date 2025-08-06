@@ -1,0 +1,52 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>{{ item?.name || 'Carregando...' }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/stock"></ion-back-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark">
+  <div *ngIf="item; else loading">
+    <ion-list>
+      <ion-item color="dark">
+        <ion-label position="stacked">Nome</ion-label>
+        <ion-input [(ngModel)]="item.name"></ion-input>
+      </ion-item>
+
+      <ion-item color="dark">
+        <ion-label position="stacked">Categoria</ion-label>
+        <ion-input [(ngModel)]="item.category"></ion-input>
+      </ion-item>
+
+      <ion-item color="dark">
+        <ion-label position="stacked">Quantidade Atual</ion-label>
+        <ion-input type="number" [(ngModel)]="item.quantity"></ion-input>
+      </ion-item>
+
+      <ion-item color="dark">
+        <ion-label position="stacked">Unidade</ion-label>
+        <ion-input [(ngModel)]="item.unit"></ion-input>
+      </ion-item>
+
+      <ion-item color="dark">
+        <ion-label position="stacked">Custo Unitário</ion-label>
+        <ion-input type="number" [(ngModel)]="item.cost"></ion-input>
+      </ion-item>
+
+      <ion-item color="dark">
+        <ion-label position="stacked">Quantidade Mínima</ion-label>
+        <ion-input type="number" [(ngModel)]="item.minQuantity"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-button (click)="updateItem()" expand="block" color="primary">
+      Salvar
+    </ion-button>
+  </div>
+
+  <ng-template #loading>
+    <ion-spinner name="crescent"></ion-spinner>
+  </ng-template>
+</ion-content>
