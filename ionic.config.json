@@ -1,0 +1,8 @@
+{
+  "name": "amocomida",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "913a51d2"
+}
