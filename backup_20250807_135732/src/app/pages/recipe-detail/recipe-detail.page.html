@@ -1,0 +1,67 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>{{ recipe?.name || 'Carregando...' }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/recipes"></ion-back-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark">
+  <ion-card color="dark" *ngIf="recipe; else loading">
+    <ion-img [src]="recipe.image" *ngIf="recipe.image"></ion-img>
+
+    <ion-card-header>
+      <ion-card-title>{{ recipe.name }}</ion-card-title>
+      <ion-card-subtitle>Criado em: {{ recipe.createdAt | date:'dd/MM/yyyy HH:mm' }}</ion-card-subtitle>
+      <ion-card-subtitle *ngIf="recipe.preparedAt">
+        Preparado em: {{ recipe.preparedAt | date:'dd/MM/yyyy HH:mm' }}
+      </ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <p>{{ recipe.description }}</p>
+
+      <h3>Ingredientes:</h3>
+      <ion-list>
+        <ion-item *ngFor="let ing of recipe.ingredients" color="dark">
+          <ion-label>{{ ing.quantity }} {{ ing.unit }} de {{ ing.name }}</ion-label>
+          <ion-note slot="end">R$ {{ (ing.quantity * ing.cost).toFixed(2) }}</ion-note>
+        </ion-item>
+      </ion-list>
+
+      <div class="cost-section">
+        <h2>Cálculo de Custo:</h2>
+        <p><strong>Total da Receita:</strong> R$ {{ (costPerPortion * recipe.portions).toFixed(2) }}</p>
+        <p><strong>Porções:</strong> {{ recipe.portions }} ({{ recipe.portionSize }}g cada)</p>
+        <p class="highlight"><strong>Custo por Porção:</strong> R$ {{ costPerPortion.toFixed(2) }}</p>
+      </div>
+
+      <div *ngIf="recipe.notes">
+        <h3>Anotações:</h3>
+        <p>{{ recipe.notes }}</p>
+      </div>
+
+      <ion-button
+        (click)="markAsPrepared()"
+        expand="block"
+        color="success"
+        *ngIf="!recipe.preparedAt">
+        <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+        Marcar como Preparada
+      </ion-button>
+
+      <ion-chip color="success" *ngIf="recipe.preparedAt">
+        <ion-icon name="checkmark-circle"></ion-icon>
+        <ion-label>Receita já preparada</ion-label>
+      </ion-chip>
+    </ion-card-content>
+  </ion-card>
+
+  <ng-template #loading>
+    <div class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Carregando receita...</p>
+    </div>
+  </ng-template>
+</ion-content>

@@ -1,18 +1,16 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
+import { IonicRouteStrategy } from '@ionic/angular';
 import { RouteReuseStrategy } from '@angular/router';
-import { importProvidersFrom } from '@angular/core';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
+import { importProvidersFrom } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
 
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideRouter(routes),
-    importProvidersFrom(IonicModule.forRoot({
-      rippleEffect: true,
-      mode: 'ios' // Melhor UX mobile
-    })),
+    importProvidersFrom(IonicModule.forRoot()) // Use importProvidersFrom
   ]
-}).catch(err => console.error(err));
+});

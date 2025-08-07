@@ -1,0 +1,62 @@
+ion-content {
+  --background: var(--ion-background-color);
+
+  ion-list {
+    margin-bottom: 20px;
+
+    ion-item {
+      --background: rgba(255, 255, 255, 0.05);
+      --border-radius: 10px;
+      margin-bottom: 10px;
+
+      ion-label {
+        color: var(--ion-text-color);
+      }
+
+      ion-input, ion-select {
+        --background: rgba(255, 255, 255, 0.1);
+        --color: var(--ion-text-color);
+        --placeholder-color: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+
+  ion-button {
+    margin-top: 20px;
+    --border-radius: 10px;
+    --background: var(--ion-color-primary);
+    --background-activated: var(--ion-color-primary-shade);
+    --background-focused: var(--ion-color-primary-tint);
+
+    &[disabled] {
+      --background: var(--ion-color-medium);
+      --color: var(--ion-color-light);
+    }
+  }
+}
+
+ion-range {
+  --bar-background: rgba(255, 255, 255, 0.2);
+  --bar-background-active: var(--ion-color-primary);
+  --bar-background-focused: var(--ion-color-primary-tint);
+  --bar-height: 8px;
+  --knob-background: var(--ion-color-primary);
+  --knob-size: 24px;
+
+  ion-label[slot="end"] {
+    margin-left: 10px;
+    font-size: 14px;
+    color: var(--ion-text-color);
+  }
+}
+
+ion-toolbar {
+  --background: var(--ion-color-dark);
+  --color: var(--ion-text-color);
+}
+
+ion-buttons {
+  ion-button {
+    --color: var(--ion-text-color);
+  }
+}

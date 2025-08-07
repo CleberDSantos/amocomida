@@ -1,21 +1,35 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
+import { Component, OnInit } from '@angular/core';
+import { IonicModule, Platform } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { RouterOutlet } from '@angular/router';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [
-    RouterOutlet,
-    IonicModule,
-    CommonModule,
-    FormsModule
-  ]
+  imports: [IonicModule, CommonModule, RouterOutlet]
 })
-export class AppComponent {
-  constructor() {}
+export class AppComponent implements OnInit {
+  constructor(private platform: Platform) {}
+
+  ngOnInit() {
+    this.initializeApp();
+  }
+
+  async initializeApp() {
+    await this.platform.ready();
+
+    // Configurações de tema e status bar
+    if (this.platform.is('capacitor')) {
+      try {
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: '#1f1f1f' });
+        // SplashScreen.hide() removido: não necessário nas versões atuais ou pode não estar instalado
+      } catch (error) {
+        console.warn('StatusBar/SplashScreen não disponível:', error);
+      }
+    }
+  }
 }
