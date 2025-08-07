@@ -1,143 +1,252 @@
 <ion-header [translucent]="true">
-  <ion-toolbar color="dark">
-    <ion-title>
-      <ion-text color="primary">AmoComida</ion-text>
+  <ion-toolbar color="dark" class="custom-toolbar">
+    <ion-title class="app-title">
+      <div class="title-container">
+        <ion-icon name="restaurant" color="primary"></ion-icon>
+        <span>AmoComida</span>
+      </div>
     </ion-title>
+
     <ion-buttons slot="end">
-      <ion-button fill="clear" routerLink="/add-recipe">
-        <ion-icon name="add-circle-outline" size="large"></ion-icon>
+      <ion-button fill="clear" class="notification-btn">
+        <ion-icon name="notifications-outline" size="large"></ion-icon>
+        <ion-badge color="danger" class="notification-badge">3</ion-badge>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" color="dark" class="feed-content">
-  
+<ion-content [fullscreen]="true" color="dark" class="home-content">
+
+  <!-- Search Bar -->
+  <div class="search-container">
+    <ion-searchbar
+      [(ngModel)]="searchTerm"
+      placeholder="Buscar receitas, ingredientes..."
+      debounce="500"
+      (ionInput)="onSearch($event)"
+      class="custom-searchbar">
+    </ion-searchbar>
+    <ion-button fill="clear" class="filter-btn">
+      <ion-icon name="options-outline" size="large" color="primary"></ion-icon>
+    </ion-button>
+  </div>
+
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)" pull-factor="0.5">
     <ion-refresher-content
       pulling-text="Puxe para atualizar..."
-      refreshing-text="Atualizando feed...">
+      refreshing-text="Atualizando...">
     </ion-refresher-content>
   </ion-refresher>
 
+  <!-- Loading State -->
   <div *ngIf="loading" class="loading-container">
     <ion-spinner name="crescent" color="primary"></ion-spinner>
     <p>Carregando receitas...</p>
   </div>
 
-  <div *ngIf="showEmptyState" class="empty-state">
-    <ion-icon name="restaurant-outline" size="large" color="medium"></ion-icon>
-    <h2>Nenhuma receita no feed</h2>
-    <p>Prepare suas receitas para vê-las aparecer aqui!</p>
-    <ion-button fill="outline" routerLink="/tabs/recipes">
-      <ion-icon name="book-outline" slot="start"></ion-icon>
-      Ver Receitas
-    </ion-button>
-  </div>
+  <!-- Main Content -->
+  <div *ngIf="!loading" class="main-content">
 
-  <div class="feed-list" *ngIf="!loading">
-    <ion-card 
-      *ngFor="let recipe of recipes; trackBy: trackByRecipe" 
-      class="recipe-card"
-      [class.liked]="recipe.liked">
-      
-      <div class="recipe-image-container">
-        <ion-img 
-          [src]="recipe.image || 'assets/default-food.jpg'" 
-          [alt]="recipe.name"
-          class="recipe-image">
-        </ion-img>
-        
-        <ion-button 
-          fill="clear" 
-          class="bookmark-btn"
-          (click)="toggleBookmark(recipe)"
-          [color]="recipe.bookmarked ? 'warning' : 'light'">
-          <ion-icon 
-            [name]="recipe.bookmarked ? 'bookmark' : 'bookmark-outline'"
-            size="small">
-          </ion-icon>
+    <!-- Featured Section -->
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Destaques</h2>
+        <ion-button fill="clear" size="small" color="primary">
+          Ver Todos
         </ion-button>
       </div>
 
-      <ion-card-content>
-        <div class="recipe-header">
+      <div class="featured-carousel">
+        <swiper-container pagination="true" [config]="slideOpts">
+          <swiper-slide *ngFor="let featured of featuredRecipes">
+            <div class="featured-card" [style.background-image]="'url(' + (featured.image || 'assets/default-food.jpg') + ')'">
+              <div class="featured-overlay">
+                <div class="featured-content">
+                  <div class="featured-badge">
+                    <ion-icon name="star" color="warning"></ion-icon>
+                    <span>Destaque</span>
+                  </div>
+                  <h3>{{ featured.name }}</h3>
+                  <p>{{ featured.description }}</p>
+                  <div class="featured-stats">
+                    <div class="stat">
+                      <ion-icon name="time-outline"></ion-icon>
+                      <span>{{ getTimeAgo(featured.preparedAt) }}</span>
+                    </div>
+                    <div class="stat">
+                      <ion-icon name="heart"></ion-icon>
+                      <span>{{ featured.likes || 0 }}</span>
+                    </div>
+                  </div>
+                  <ion-button
+                    size="small"
+                    fill="solid"
+                    color="primary"
+                    [routerLink]="['/recipe-detail', featured.id]">
+                    Ver Receita
+                  </ion-button>
+                </div>
+              </div>
+            </div>
+          </swiper-slide>
+        </swiper-container>
+      </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Categorias</h2>
+        <ion-button fill="clear" size="small" color="primary" routerLink="/categories">
+          Ver Todas
+        </ion-button>
+      </div>
+
+      <div class="categories-grid">
+        <div
+          *ngFor="let category of categories"
+          class="category-item"
+          (click)="selectCategory(category)">
+          <div class="category-icon">
+            <ion-icon [name]="category.icon" [color]="category.color"></ion-icon>
+          </div>
+          <h4>{{ category.name }}</h4>
+          <span>{{ category.count }} receitas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Recipes Section -->
+    <div class="section-container">
+      <div class="section-header">
+        <h2>Receitas Mais Votadas</h2>
+        <ion-button fill="clear" size="small" color="primary">
+          Ver Todas
+        </ion-button>
+      </div>
+
+      <div class="recipes-grid">
+        <div
+          *ngFor="let recipe of topRecipes; trackBy: trackByRecipe"
+          class="recipe-card"
+          [routerLink]="['/recipe-detail', recipe.id]">
+
+          <div class="recipe-image-container">
+            <ion-img
+              [src]="recipe.image || 'assets/default-food.jpg'"
+              [alt]="recipe.name"
+              class="recipe-image">
+            </ion-img>
+
+            <div class="recipe-rating">
+              <ion-icon name="star" color="warning"></ion-icon>
+              <span>{{ recipe.rating || 4.5 }}</span>
+            </div>
+
+            <ion-button
+              fill="clear"
+              class="favorite-btn"
+              (click)="toggleFavorite(recipe, $event)"
+              [color]="recipe.favorited ? 'danger' : 'light'">
+              <ion-icon
+                [name]="recipe.favorited ? 'heart' : 'heart-outline'"
+                size="small">
+              </ion-icon>
+            </ion-button>
+          </div>
+
           <div class="recipe-info">
-            <h2 class="recipe-title">{{ recipe.name }}</h2>
-            <p class="recipe-time">{{ getTimeAgo(recipe.preparedAt) }}</p>
-          </div>
-          
-          <ion-chip 
-            class="cost-chip"
-            [color]="getCostColor(+calculateCost(recipe))">
-            <ion-icon name="card-outline" size="small"></ion-icon>
-            <ion-label>R$ {{ calculateCost(recipe) }}</ion-label>
-          </ion-chip>
-        </div>
+            <h3>{{ recipe.name }}</h3>
+            <p class="recipe-description">{{ recipe.description }}</p>
 
-        <p class="recipe-description">{{ recipe.description }}</p>
-        
-        <div class="recipe-stats">
-          <div class="stat">
-            <ion-icon name="people-outline" color="primary"></ion-icon>
-            <span>{{ recipe.portions }} porções</span>
-          </div>
-          <div class="stat">
-            <ion-icon name="scale-outline" color="primary"></ion-icon>
-            <span>{{ recipe.portionSize }}g</span>
-          </div>
-          <div class="stat">
-            <ion-icon name="restaurant-outline" color="primary"></ion-icon>
-            <span>{{ recipe.ingredients.length }} ingredientes</span>
+            <div class="recipe-stats">
+              <div class="stat">
+                <ion-icon name="people-outline"></ion-icon>
+                <span>{{ recipe.portions }} porções</span>
+              </div>
+              <div class="stat">
+                <ion-icon name="time-outline"></ion-icon>
+                <span>{{ getTimeAgo(recipe.preparedAt) }}</span>
+              </div>
+            </div>
+
+            <div class="recipe-footer">
+              <div class="cost">
+                <ion-icon name="card-outline" color="success"></ion-icon>
+                <span>R$ {{ calculateCost(recipe) }}</span>
+              </div>
+              <div class="likes">
+                <ion-icon name="heart-outline" color="danger"></ion-icon>
+                <span>{{ recipe.likes || 0 }}</span>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="recipe-actions">
-          <ion-button 
-            fill="clear" 
-            size="small"
-            (click)="toggleLike(recipe)"
-            [color]="recipe.liked ? 'danger' : 'medium'"
-            [class.animate-like]="recipe.showLikeAnimation">
-            <ion-icon 
-              [name]="recipe.liked ? 'heart' : 'heart-outline'"
-              slot="start">
-            </ion-icon>
-            {{ recipe.likes }}
-          </ion-button>
-
-          <ion-button 
-            fill="clear" 
-            size="small"
-            color="medium">
-            <ion-icon name="chatbubble-outline" slot="start"></ion-icon>
-            Comentários
-          </ion-button>
-
-          <ion-button 
-            fill="solid" 
-            size="small"
-            color="primary"
-            [routerLink]="['/recipe-detail', recipe.id]"
-            slot="end">
-            <ion-icon name="eye-outline" slot="start"></ion-icon>
-            Ver Receita
-          </ion-button>
+    <!-- Quick Actions -->
+    <div class="section-container">
+      <div class="quick-actions">
+        <div class="action-card" routerLink="/add-recipe">
+          <div class="action-icon">
+            <ion-icon name="add-circle" color="success"></ion-icon>
+          </div>
+          <div class="action-text">
+            <h4>Nova Receita</h4>
+            <p>Crie uma receita</p>
+          </div>
         </div>
-      </ion-card-content>
-    </ion-card>
+
+        <div class="action-card" routerLink="/tabs/shopping-list">
+          <div class="action-icon">
+            <ion-icon name="cart" color="primary"></ion-icon>
+          </div>
+          <div class="action-text">
+            <h4>Lista de Compras</h4>
+            <p>Organize suas compras</p>
+          </div>
+        </div>
+
+        <div class="action-card" routerLink="/tabs/settings">
+          <div class="action-icon">
+            <ion-icon name="restaurant" color="warning"></ion-icon>
+          </div>
+          <div class="action-text">
+            <h4>Meu Estoque</h4>
+            <p>Gerencie ingredientes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="showEmptyState" class="empty-state">
+      <ion-icon name="restaurant-outline" size="large" color="medium"></ion-icon>
+      <h2>Nenhuma receita encontrada</h2>
+      <p>Comece criando sua primeira receita!</p>
+      <ion-button fill="outline" routerLink="/add-recipe">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Criar Receita
+      </ion-button>
+    </div>
+
   </div>
 
-  <ion-infinite-scroll 
-    *ngIf="hasMoreData && !loading"
-    (ionInfinite)="loadMoreData($event)"
-    threshold="100px">
-    <ion-infinite-scroll-content
-      loading-text="Carregando mais receitas...">
-    </ion-infinite-scroll-content>
-  </ion-infinite-scroll>
+  <!-- FAB for Quick Add -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" routerLink="/add-recipe">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-list side="top">
+      <ion-fab-button color="success" routerLink="/add-ingredient">
+        <ion-icon name="leaf"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-button color="warning" routerLink="/tabs/shopping-list">
+        <ion-icon name="cart"></ion-icon>
+      </ion-fab-button>
+    </ion-fab-list>
+  </ion-fab>
 
-  <div *ngIf="loadingMore" class="loading-more">
-    <ion-spinner name="dots" color="primary"></ion-spinner>
-  </div>
 </ion-content>

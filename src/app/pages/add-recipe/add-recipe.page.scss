@@ -1,0 +1,531 @@
+ion-content {
+  --background: var(--ion-background-color);
+}
+
+// ===================================
+// CARDS PRINCIPAIS
+// ===================================
+
+.recipe-info-card, .ingredients-card, .notes-card {
+  margin: 16px;
+  border-radius: 16px;
+  --background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  ion-item {
+    --background: transparent;
+    --border-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 12px;
+    border-radius: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// ===================================
+// PARÂMETROS DA RECEITA
+// ===================================
+
+.recipe-params {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+// ===================================
+// SELETOR DE INGREDIENTES
+// ===================================
+
+.ingredient-selector {
+  --background: rgba(79, 195, 247, 0.1);
+  --border-color: var(--ion-color-primary);
+  border: 1px solid var(--ion-color-primary);
+  border-radius: 12px;
+  margin-bottom: 20px;
+
+  .ingredient-select {
+    width: 100%;
+  }
+}
+
+.ingredient-option {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+
+  .ingredient-name {
+    font-weight: 600;
+    color: var(--ion-text-color);
+  }
+
+  .ingredient-stock {
+    .stock-text {
+      font-size: 12px;
+      color: var(--ion-color-medium);
+    }
+  }
+}
+
+// ===================================
+// PICKER DE QUANTIDADE
+// ===================================
+
+.quantity-picker {
+  --background: rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  margin: 16px 0;
+  animation: slideInDown 0.3s ease-out;
+
+  .picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+
+    .ingredient-info {
+      flex: 1;
+
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--ion-color-primary);
+      }
+
+      .stock-category {
+        margin: 0;
+        font-size: 14px;
+        color: var(--ion-color-medium);
+      }
+    }
+  }
+}
+
+// ===================================
+// PROGRESS BAR DO ESTOQUE
+// ===================================
+
+.stock-progress {
+  margin-bottom: 24px;
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+
+    .stock-value {
+      color: var(--ion-color-primary);
+    }
+  }
+
+  ion-progress-bar {
+    height: 12px;
+    border-radius: 6px;
+    --progress-background: rgba(255, 255, 255, 0.1);
+    margin-bottom: 4px;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ion-color-medium);
+
+    .min-label {
+      color: var(--ion-color-warning);
+      font-weight: 600;
+    }
+  }
+}
+
+// ===================================
+// CONTROLE DE QUANTIDADE
+// ===================================
+
+.quantity-control {
+  .quantity-hint {
+    font-size: 12px;
+    color: var(--ion-color-medium);
+    font-weight: normal;
+  }
+
+  .quantity-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+
+    .quantity-input {
+      flex: 1;
+      text-align: center;
+      --background: rgba(255, 255, 255, 0.1);
+      --color: var(--ion-text-color);
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .unit-label {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+      min-width: 30px;
+      font-weight: 600;
+    }
+  }
+
+  .quantity-range {
+    margin: 16px 0;
+    --bar-height: 8px;
+    --knob-size: 24px;
+    --bar-background: rgba(255, 255, 255, 0.2);
+    --bar-background-active: var(--ion-color-primary);
+    --knob-background: var(--ion-color-primary);
+  }
+}
+
+// ===================================
+// BOTÕES DE AÇÃO
+// ===================================
+
+.picker-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+
+  .cancel-btn {
+    flex: 1;
+    --color: var(--ion-color-medium);
+    --border-color: var(--ion-color-medium);
+  }
+
+  .confirm-btn {
+    flex: 2;
+    --background: var(--ion-color-success);
+    --background-activated: var(--ion-color-success-shade);
+    font-weight: 600;
+  }
+}
+
+// ===================================
+// INGREDIENTES ADICIONADOS
+// ===================================
+
+.added-ingredients {
+  margin-top: 24px;
+
+  .ingredients-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ion-text-color);
+  }
+}
+
+.ingredient-card {
+  --background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 12px;
+  border-radius: 12px;
+  animation: fadeInUp 0.3s ease-out;
+
+  .ingredient-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .ingredient-details {
+      flex: 1;
+
+      h4 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--ion-text-color);
+      }
+
+      .ingredient-quantity {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        ion-chip {
+          --background: transparent;
+          --color: var(--ion-text-color);
+          font-size: 12px;
+          height: 24px;
+        }
+      }
+
+      .ingredient-cost {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ion-color-success);
+      }
+    }
+
+    .remove-btn {
+      --color: var(--ion-color-danger);
+      --background: rgba(244, 67, 54, 0.1);
+      --border-radius: 50%;
+      margin-left: 12px;
+    }
+  }
+}
+
+// ===================================
+// ESTADO VAZIO
+// ===================================
+
+.empty-ingredients {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ion-color-medium);
+
+  ion-icon {
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  p {
+    margin: 8px 0;
+
+    &.empty-hint {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  }
+}
+
+// ===================================
+// RESUMO DA RECEITA
+// ===================================
+
+.recipe-summary {
+  margin: 16px;
+  --background: linear-gradient(135deg, rgba(79, 195, 247, 0.1), rgba(255, 235, 59, 0.1));
+  border-radius: 16px;
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+
+      ion-icon {
+        font-size: 24px;
+      }
+
+      div {
+        display: flex;
+        flex-direction: column;
+
+        strong {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--ion-text-color);
+        }
+
+        small {
+          font-size: 12px;
+          color: var(--ion-color-medium);
+        }
+      }
+    }
+  }
+}
+
+// ===================================
+// TOOLBAR
+// ===================================
+
+ion-toolbar {
+  --background: var(--ion-color-dark);
+  --color: var(--ion-text-color);
+
+  ion-buttons ion-button {
+    --color: var(--ion-text-color);
+    --border-radius: 50%;
+
+    &[disabled] {
+      --color: var(--ion-color-medium);
+    }
+  }
+}
+
+// ===================================
+// FAB BUTTON
+// ===================================
+
+ion-fab-button {
+  --background: var(--ion-color-success);
+  --color: white;
+  --box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+
+  &:hover {
+    --background: var(--ion-color-success-shade);
+  }
+}
+
+// ===================================
+// ANIMAÇÕES
+// ===================================
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+// ===================================
+// RESPONSIVIDADE
+// ===================================
+
+@media (max-width: 768px) {
+  .recipe-info-card, .ingredients-card, .notes-card, .recipe-summary {
+    margin: 12px;
+  }
+
+  .recipe-params {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .picker-header {
+    flex-direction: column;
+    gap: 12px;
+
+    .ingredient-info {
+      text-align: center;
+    }
+  }
+
+  .quantity-input-group {
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .quantity-input {
+      min-width: 120px;
+    }
+  }
+
+  .picker-actions {
+    flex-direction: column;
+
+    .confirm-btn, .cancel-btn {
+      flex: 1;
+    }
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+// ===================================
+// ESTADOS ESPECIAIS
+// ===================================
+
+.low-stock {
+  --background: rgba(244, 67, 54, 0.1);
+  --border-color: var(--ion-color-danger);
+  border: 1px solid var(--ion-color-danger);
+}
+
+.good-stock {
+  --background: rgba(76, 175, 80, 0.1);
+  --border-color: var(--ion-color-success);
+}
+
+.warning-stock {
+  --background: rgba(255, 152, 0, 0.1);
+  --border-color: var(--ion-color-warning);
+  border: 1px solid var(--ion-color-warning);
+}
+
+// ===================================
+// MELHORIAS DE ACESSIBILIDADE
+// ===================================
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+ion-button:focus,
+ion-item:focus {
+  outline: 2px solid var(--ion-color-primary);
+  outline-offset: 2px;
+}
+
+// ===================================
+// DARK MODE ESPECÍFICO
+// ===================================
+
+@media (prefers-color-scheme: dark) {
+  ion-progress-bar {
+    --progress-background: rgba(255, 255, 255, 0.1);
+  }
+
+  .ingredient-card {
+    --background: rgba(255, 255, 255, 0.08);
+  }
+
+  .summary-item {
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+}

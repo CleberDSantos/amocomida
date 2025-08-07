@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Camera, CameraResultType } from '@capacitor/camera';
-import { IonicModule, NavController, AlertController } from '@ionic/angular';
+import { IonicModule, NavController, AlertController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -8,6 +8,7 @@ import { Recipe } from 'src/app/models/recipe.model';
 import { RecipeService } from 'src/app/services/recipe.service';
 import { StockService } from 'src/app/services/stock.service';
 import { StockItem } from 'src/app/models/stock.model';
+import { HapticEngine } from 'src/app/services/haptic.service';
 
 @Component({
   selector: 'app-add-recipe',
@@ -22,39 +23,35 @@ import { StockItem } from 'src/app/models/stock.model';
   ]
 })
 export class AddRecipePage {
-  // expor Math para uso seguro no template (Angular não permite acessar Math global diretamente)
+  // Expor Math para uso no template
   readonly Math = Math;
+
   availableIngredients: StockItem[] = [];
 
-  // estado para seleção de ingrediente fracionado
+  // Estado para seleção de ingrediente fracionado
   pickerOpen: boolean = false;
   selectedStockItem?: StockItem;
   selectedQuantity: number = 0;
   selectedMax: number = 0;
   selectedUnit: string = '';
 
-  // mapa de step por unidade para granularidade do range
+  // Mapa de step por unidade para granularidade do range
   private unitStepMap: Record<string, number> = {
-    mg: 50,
+    mg: 10,
     g: 5,
-    kg: 0.05,
-    mL: 50,
-    L: 0.05,
-    unidade: 1,
+    kg: 0.01,
+    mL: 10,
+    L: 0.01,
     un: 1,
-    uni: 1
+    uni: 1,
+    unidade: 1,
+    cx: 1,
+    pacote: 1
   };
 
   get currentStep(): number {
     const u = (this.selectedUnit || '').toLowerCase();
-    // normaliza chaves
-    if (u === 'ml') return this.unitStepMap['mL'];
-    if (u === 'l') return this.unitStepMap['L'];
-    if (u === 'g') return this.unitStepMap['g'];
-    if (u === 'kg') return this.unitStepMap['kg'];
-    if (u === 'mg') return this.unitStepMap['mg'];
-    if (u === 'unidade' || u === 'un' || u === 'uni' || u === 'ud' || u === 'ud.' || u === 'u') return 1;
-    return 0.01; // fallback fino
+    return this.unitStepMap[u] || 0.01;
   }
 
   recipe: Recipe = {
@@ -74,77 +71,153 @@ export class AddRecipePage {
     private router: Router,
     private navCtrl: NavController,
     private alertController: AlertController,
-    private stockService: StockService
+    private toastController: ToastController,
+    private stockService: StockService,
+    private haptic: HapticEngine
   ) {}
 
   async ionViewWillEnter() {
-    // carregar ingredientes do estoque para seleção
-    this.availableIngredients = await this.stockService.getStock();
+    await this.loadAvailableIngredients();
   }
 
-  // inicia seleção do ingrediente: abre picker + prepara range
-  addIngredientFromStock(stockItem?: StockItem) {
-    if (!stockItem) return;
+  // ===================================
+  // GERENCIAMENTO DE INGREDIENTES
+  // ===================================
+
+  private async loadAvailableIngredients() {
+    this.availableIngredients = await this.stockService.getStock();
+    // Filtrar apenas ingredientes com quantidade > 0
+    this.availableIngredients = this.availableIngredients.filter(item => item.quantity > 0);
+  }
+
+  selectIngredientFromStock(stockItem?: StockItem) {
+    if (!stockItem || stockItem.quantity <= 0) {
+      this.showToast('Este ingrediente não possui estoque suficiente!', 'warning');
+      return;
+    }
+
+    this.haptic.medium();
     this.selectedStockItem = stockItem;
     this.selectedUnit = stockItem.unit;
     this.selectedMax = Math.max(0, stockItem.quantity || 0);
-    // default: 10% do disponível (para facilitar fracionamento)
-    this.selectedQuantity = Math.round((this.selectedMax * 0.1) * 100) / 100;
+
+    // Default: 10% do disponível (para facilitar fracionamento)
+    const defaultQuantity = Math.max(this.currentStep, this.selectedMax * 0.1);
+    this.selectedQuantity = Math.min(defaultQuantity, this.selectedMax);
+
     this.pickerOpen = true;
   }
 
-  // confirma a seleção fracionada e cria o card/entrada
-  // utilitário: converte quantidade de unidade exibida (display) para unidade original
-  private convertDisplayToOriginal(quantity: number, displayUnit: string, originalUnit: string): number {
-    if (originalUnit === displayUnit) return quantity;
-    if (originalUnit === 'kg' && displayUnit === 'g') return quantity / 1000; // g -> kg
-    if (originalUnit === 'L' && displayUnit === 'mL') return quantity / 1000; // mL -> L
-    // Sem conversão definida, retorna como está
-    return quantity;
+  // ===================================
+  // CONTROLES DE QUANTIDADE
+  // ===================================
+
+  increaseQuantity() {
+    const newQuantity = this.selectedQuantity + this.currentStep;
+    if (newQuantity <= this.selectedMax) {
+      this.selectedQuantity = Math.round(newQuantity * 100) / 100;
+      this.haptic.light();
+    }
   }
 
-  // utilitário: converte de original para display (para somar corretamente no card)
-  private convertOriginalToDisplay(quantity: number, originalUnit: string, displayUnit: string): number {
-    if (originalUnit === displayUnit) return quantity;
-    if (originalUnit === 'kg' && displayUnit === 'g') return quantity * 1000; // kg -> g
-    if (originalUnit === 'L' && displayUnit === 'mL') return quantity * 1000; // L -> mL
-    return quantity;
+  decreaseQuantity() {
+    const newQuantity = this.selectedQuantity - this.currentStep;
+    if (newQuantity >= 0) {
+      this.selectedQuantity = Math.max(0, Math.round(newQuantity * 100) / 100);
+      this.haptic.light();
+    }
   }
+
+  onQuantityChange(event: any) {
+    const value = parseFloat(event.detail.value) || 0;
+    this.selectedQuantity = Math.max(0, Math.min(value, this.selectedMax));
+  }
+
+  // ===================================
+  // CÁLCULOS E INDICADORES VISUAIS
+  // ===================================
+
+  getStockProgress(item: StockItem): number {
+    if (!item || item.minQuantity === 0) return 1;
+    return Math.min(1, item.quantity / (item.minQuantity * 3)); // 3x o mínimo = 100%
+  }
+
+  getStockProgressColor(item: StockItem): string {
+    const progress = this.getStockProgress(item);
+    if (progress < 0.3) return 'danger';
+    if (progress < 0.6) return 'warning';
+    return 'success';
+  }
+
+  getStockHealthColor(item: StockItem): string {
+    if (item.quantity <= item.minQuantity) return 'danger';
+    if (item.quantity <= item.minQuantity * 2) return 'warning';
+    return 'success';
+  }
+
+  getStockHealthIcon(item: StockItem): string {
+    if (item.quantity <= item.minQuantity) return 'alert-circle';
+    if (item.quantity <= item.minQuantity * 2) return 'warning';
+    return 'checkmark-circle';
+  }
+
+  getStockHealthText(item: StockItem): string {
+    if (item.quantity <= item.minQuantity) return 'Estoque Baixo';
+    if (item.quantity <= item.minQuantity * 2) return 'Atenção';
+    return 'Bom Estoque';
+  }
+
+  getQuantityPercentage(): number {
+    if (this.selectedMax === 0) return 0;
+    return Math.round((this.selectedQuantity / this.selectedMax) * 100);
+  }
+
+  getQuantityRangeColor(): string {
+    const percentage = this.getQuantityPercentage();
+    if (percentage > 80) return 'danger';
+    if (percentage > 60) return 'warning';
+    return 'primary';
+  }
+
+  // ===================================
+  // CONFIRMAÇÃO E CANCELAMENTO
+  // ===================================
 
   confirmSelectedIngredient() {
     if (!this.selectedStockItem) return;
 
     // Validação: impedir confirmar com 0
     if (this.selectedQuantity <= 0) {
-      // feedback simples via alert controller
-      this.alertController.create({
-        header: 'Quantidade inválida',
-        message: 'Selecione uma quantidade maior que zero.',
-        buttons: ['OK']
-      }).then(a => a.present());
+      this.showToast('Selecione uma quantidade maior que zero.', 'warning');
       return;
     }
 
-    // Conversão: exibição em unidade menor, armazenamento na unidade original do estoque
+    // Validação: verificar se há estoque suficiente
+    if (this.selectedQuantity > this.selectedMax) {
+      this.showToast('Quantidade selecionada excede o estoque disponível!', 'danger');
+      return;
+    }
+
     const originalUnit = this.selectedStockItem.unit;
     const displayUnit = this.selectedUnit;
-
-    // Clamp da quantidade exibida
     const clampedDisplayQty = Math.min(this.selectedQuantity, this.selectedMax);
     const qtyOriginal = this.convertDisplayToOriginal(clampedDisplayQty, displayUnit, originalUnit);
 
     // Verificar se já existe ingrediente com o mesmo ID
-    const idx = this.recipe.ingredients.findIndex(i => i.id === this.selectedStockItem!.id);
-    if (idx >= 0) {
+    const existingIndex = this.recipe.ingredients.findIndex(i => i.id === this.selectedStockItem!.id);
+
+    if (existingIndex >= 0) {
       // Somar quantidades
-      const existing = this.recipe.ingredients[idx];
+      const existing = this.recipe.ingredients[existingIndex];
       const newOriginalQty = (existing.quantity || 0) + qtyOriginal;
 
-      // Atualizar quantidade original
-      existing.quantity = Math.round(newOriginalQty * 100) / 100;
+      // Verificar se a soma não excede o estoque
+      if (newOriginalQty > this.selectedStockItem.quantity) {
+        this.showToast('Quantidade total excederia o estoque disponível!', 'danger');
+        return;
+      }
 
-      // Atualizar campos de exibição (somar também no display, respeitando unidade do display atual)
-      // Caso o existing tenha displayUnit, converter original acumulado para a unidade de exibição atual
+      existing.quantity = Math.round(newOriginalQty * 100) / 100;
       const displayToUse = displayUnit || (existing as any).displayUnit || originalUnit;
       const displayQtyAccum = this.convertOriginalToDisplay(existing.quantity, originalUnit, displayToUse);
       (existing as any).displayQuantity = Math.round(displayQtyAccum * 100) / 100;
@@ -164,7 +237,8 @@ export class AddRecipePage {
       });
     }
 
-    // limpa estado
+    this.haptic.success();
+    this.showToast(`${this.selectedStockItem.name} adicionado!`, 'success');
     this.cancelSelection();
   }
 
@@ -174,72 +248,166 @@ export class AddRecipePage {
     this.selectedQuantity = 0;
     this.selectedMax = 0;
     this.selectedUnit = '';
+    this.haptic.light();
   }
-
-  // Removido: adição manual não é mais suportada por solicitação do usuário
-  // addIngredient() { ... }
 
   removeIngredient(index: number) {
-    this.recipe.ingredients.splice(index, 1);
+    if (index >= 0 && index < this.recipe.ingredients.length) {
+      const ingredient = this.recipe.ingredients[index];
+      this.recipe.ingredients.splice(index, 1);
+      this.haptic.medium();
+      this.showToast(`${ingredient.name} removido!`, 'medium');
+    }
   }
+
+  // ===================================
+  // UTILITÁRIOS DE CONVERSÃO
+  // ===================================
+
+  private convertDisplayToOriginal(quantity: number, displayUnit: string, originalUnit: string): number {
+    if (originalUnit === displayUnit) return quantity;
+    if (originalUnit === 'kg' && displayUnit === 'g') return quantity / 1000;
+    if (originalUnit === 'L' && displayUnit === 'mL') return quantity / 1000;
+    return quantity;
+  }
+
+  private convertOriginalToDisplay(quantity: number, originalUnit: string, displayUnit: string): number {
+    if (originalUnit === displayUnit) return quantity;
+    if (originalUnit === 'kg' && displayUnit === 'g') return quantity * 1000;
+    if (originalUnit === 'L' && displayUnit === 'mL') return quantity * 1000;
+    return quantity;
+  }
+
+  // ===================================
+  // VALIDAÇÃO E RESUMO
+  // ===================================
+
+  isFormValid(): boolean {
+    return !!(
+      this.recipe.name?.trim() &&
+      this.recipe.description?.trim() &&
+      this.recipe.ingredients.length > 0 &&
+      this.recipe.portions > 0 &&
+      this.recipe.portionSize > 0
+    );
+  }
+
+  getTotalCost(): number {
+    return this.recipe.ingredients.reduce(
+      (sum, ing) => sum + (ing.quantity * ing.cost),
+      0
+    );
+  }
+
+  getCostPerPortion(): number {
+    const total = this.getTotalCost();
+    return this.recipe.portions > 0 ? total / this.recipe.portions : total;
+  }
+
+  // ===================================
+  // AÇÕES PRINCIPAIS
+  // ===================================
 
   async takePicture() {
     try {
+      this.haptic.light();
       const image = await Camera.getPhoto({
         quality: 90,
         allowEditing: false,
         resultType: CameraResultType.Uri
       });
       this.recipe.image = image.webPath;
+      this.showToast('Foto adicionada!', 'success');
     } catch (error) {
       console.error('Erro ao capturar foto:', error);
+      this.showToast('Erro ao capturar foto', 'danger');
     }
   }
 
   async saveRecipe() {
-    if (!this.recipe.name || !this.recipe.description) {
-      const alert = await this.alertController.create({
-        header: 'Campos obrigatórios',
-        message: 'Por favor, preencha o nome e a descrição da receita.',
-        buttons: ['OK']
-      });
-      await alert.present();
+    if (!this.isFormValid()) {
+      this.showToast('Preencha todos os campos obrigatórios', 'warning');
       return;
     }
 
-    if (this.recipe.ingredients.length === 0) {
-      const alert = await this.alertController.create({
-        header: 'Ingredientes necessários',
-        message: 'Adicione pelo menos um ingrediente à receita.',
-        buttons: ['OK']
-      });
-      await alert.present();
-      return;
-    }
+    this.haptic.medium();
 
-    // Consumir automaticamente do estoque os ingredientes usados
-    // Usa a unidade original armazenada no ingrediente
-    const toConsume = this.recipe.ingredients.map(i => ({
-      name: i.name,
-      quantity: i.quantity,
-      unit: i.unit
-    }));
     try {
+      // Consumir automaticamente do estoque os ingredientes usados
+      const toConsume = this.recipe.ingredients.map(i => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit
+      }));
+
       await this.stockService.consumeIngredients(toConsume);
-    } catch (e) {
-      console.error('Erro ao consumir estoque:', e);
+
+      this.recipe.id = Math.random().toString(36).substring(7);
+      await this.recipeService.addRecipe(this.recipe);
+
+      this.haptic.success();
+
+      const alert = await this.alertController.create({
+        header: 'Receita Salva! 🎉',
+        message: `"${this.recipe.name}" foi adicionada e o estoque foi atualizado automaticamente.`,
+        buttons: [{
+          text: 'Ver Receitas',
+          handler: () => {
+            this.router.navigate(['/tabs/recipes']);
+          }
+        }, {
+          text: 'Nova Receita',
+          handler: () => {
+            this.resetForm();
+          }
+        }]
+      });
+
+      await alert.present();
+
+    } catch (error) {
+      console.error('Erro ao salvar receita:', error);
+      this.haptic.error();
+      this.showToast('Erro ao salvar receita', 'danger');
     }
+  }
 
-    this.recipe.id = Math.random().toString(36).substring(7);
-    await this.recipeService.addRecipe(this.recipe);
+  goBack() {
+    this.haptic.light();
+    this.navCtrl.back();
+  }
 
-    const alert = await this.alertController.create({
-      header: 'Sucesso!',
-      message: 'Receita adicionada e estoque atualizado!',
-      buttons: ['OK']
+  // ===================================
+  // UTILITÁRIOS
+  // ===================================
+
+  private resetForm() {
+    this.recipe = {
+      id: '',
+      name: '',
+      description: '',
+      image: '',
+      ingredients: [],
+      portions: 1,
+      portionSize: 100,
+      createdAt: new Date(),
+      notes: ''
+    };
+    this.cancelSelection();
+    this.loadAvailableIngredients();
+  }
+
+  private async showToast(message: string, color: string) {
+    const toast = await this.toastController.create({
+      message,
+      color,
+      duration: 2500,
+      position: 'top',
+      buttons: [{
+        icon: 'close',
+        role: 'cancel'
+      }]
     });
-    await alert.present();
-
-    await this.router.navigate(['/tabs/recipes']);
+    await toast.present();
   }
 }
