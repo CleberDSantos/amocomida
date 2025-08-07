@@ -1,17 +1,10 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
-import { AddIngredientPage } from './add-ingredient.page';
-
-const routes: Routes = [
-  {
-    path: '',
-    component: AddIngredientPage
-  }
-];
-
+// Esta página é standalone e já é carregada via loadComponent no app-routing.
+// Não precisamos declarar rotas aqui para evitar dependência do símbolo da página.
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
+  imports: [RouterModule.forChild([])],
   exports: [RouterModule],
 })
 export class AddIngredientPageRoutingModule {}

@@ -45,6 +45,7 @@
       <ion-label position="stacked">Unidade</ion-label>
       <ion-select
         [(ngModel)]="ingredient.unit"
+        (ionChange)="selectUnit(ingredient.unit)"
         placeholder="Selecione uma unidade"
         interface="popover">
         <ion-select-option *ngFor="let unit of units" [value]="unit">
@@ -53,29 +54,33 @@
       </ion-select>
     </ion-item>
 
-    <!-- Quantidade com Slide -->
+    <!-- Quantidade: campo numérico -->
     <ion-item>
       <ion-label position="stacked">Quantidade</ion-label>
-      <ion-range
+      <ion-input
+        type="number"
+        inputmode="decimal"
         min="0"
-        max="5000"
-        step="1"
+        step="0.01"
         [(ngModel)]="ingredient.quantity"
-        snaps="true">
-        <ion-label slot="end">{{ ingredient.quantity }} {{ ingredient.unit }}</ion-label>
-      </ion-range>
+        (ionInput)="onQuantityInput($event)"
+        placeholder="0.00">
+      </ion-input>
+      <ion-note slot="end">{{ ingredient.unit }}</ion-note>
     </ion-item>
 
-    <!-- Quantidade Mínima com Slide -->
-    <ion-item>
+    <!-- Quantidade Mínima (ion-range com default 15%) -->
+    <ion-item lines="none">
       <ion-label position="stacked">Quantidade Mínima</ion-label>
       <ion-range
-        min="0"
-        max="1000"
-        step="1"
-        [(ngModel)]="ingredient.minQuantity"
-        snaps="true">
-        <ion-label slot="end">{{ ingredient.minQuantity }} {{ ingredient.unit }}</ion-label>
+        [min]="0"
+        [max]="ingredient.unit ? (ingredient.unit === 'kg' || ingredient.unit === 'L' ? ingredient.quantity * 1000 : ingredient.quantity) : 0"
+        [step]="1"
+        [snaps]="true"
+        [value]="ingredient.minQuantity"
+        (ionChange)="onMinQuantityChange($event)">
+        <ion-label slot="start">0</ion-label>
+        <ion-label slot="end">{{ ingredient.minQuantity }} {{ minQuantityUnit }}</ion-label>
       </ion-range>
     </ion-item>
 

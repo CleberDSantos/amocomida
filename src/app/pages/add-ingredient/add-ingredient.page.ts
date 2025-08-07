@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService } from 'src/app/services/stock.service';
 import { StockItem } from 'src/app/models/stock.model';
+import { CategoryService, Category } from 'src/app/services/category.service';
 
 @Component({
   selector: 'app-add-ingredient',
@@ -18,6 +19,8 @@ import { StockItem } from 'src/app/models/stock.model';
 })
 export class AddIngredientPage implements OnInit {
   categories: string[] = [];
+  categoryList: Category[] = [];
+  userAdjustedMin = false;
   units: string[] = ['g', 'kg', 'mg', 'L', 'mL', 'un', 'cx', 'pacote'];
 
   ingredient: StockItem = {
@@ -37,12 +40,15 @@ export class AddIngredientPage implements OnInit {
 
   constructor(
     private stockService: StockService,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private categoryService: CategoryService
   ) {}
 
   async ngOnInit() {
-    this.categories = await this.stockService.getCategories();
-    // Adicionar categoria padrão se não houver categorias
+    // Carregar categorias do CategoryService (CRUD)
+    const cats = await this.categoryService.getAll();
+    this.categoryList = cats;
+    this.categories = cats.map(c => c.name);
     if (this.categories.length === 0) {
       this.categories = ['Outros'];
     }
@@ -76,60 +82,59 @@ export class AddIngredientPage implements OnInit {
   // Função para selecionar unidade com dropdown
   selectUnit(unit: string) {
     this.ingredient.unit = unit;
-    // Calcular automaticamente a quantidade mínima quando a unidade mudar
-    this.calculateMinQuantity();
+    // Recalcula min (15% por padrão) e ajusta unidade mínima
+    this.userAdjustedMin = false;
+    this.calculateMinQuantity(true);
   }
 
-  // Função para ajustar quantidade com slide
+  // Ajuste de quantidade via input numérico
+  onQuantityInput(event: any) {
+    const raw = typeof event?.detail?.value === 'string' ? event.detail.value : event?.target?.value;
+    const parsed = parseFloat(raw);
+    this.ingredient.quantity = isNaN(parsed) ? 0 : parsed;
+    // Recalcular 15% como padrão apenas se o usuário não alterou manualmente o range
+    this.calculateMinQuantity(!this.userAdjustedMin);
+  }
+
+  // Função para ajustar quantidade com slide (mantida caso ainda exista binding antigo)
   onQuantityChange(event: any) {
-    this.ingredient.quantity = event.detail.value;
-    // Calcular automaticamente a quantidade mínima quando a quantidade mudar
+    const parsed = parseFloat(event?.detail?.value);
+    this.ingredient.quantity = isNaN(parsed) ? 0 : parsed;
     this.calculateMinQuantity();
   }
 
   // Função para ajustar quantidade mínima com slide
   onMinQuantityChange(event: any) {
-    this.ingredient.minQuantity = event.detail.value;
+    const val = parseFloat(event?.detail?.value);
+    this.ingredient.minQuantity = isNaN(val) ? 0 : val;
+    this.userAdjustedMin = true;
   }
 
   // Função para calcular a quantidade mínima automaticamente
-  calculateMinQuantity() {
+  // defaultPercentTrue: quando true, aplica 15% como padrão; senão apenas mantém unidade-alvo
+  calculateMinQuantity(defaultPercentTrue: boolean = true) {
     if (!this.ingredient.unit || this.ingredient.quantity <= 0) {
       return;
     }
 
-    let minQuantity = 0;
+    // converter quantidade para unidade-base menor e aplicar 15% se solicitado
+    const { minUnit, factorToMin } = this.getMinUnitAndFactor(this.ingredient.unit);
+    this.minQuantityUnit = minUnit;
 
-    // Lógica de conversão de unidades
-    switch (this.ingredient.unit) {
-      case 'kg':
-        // Converter para gramas (1kg = 1000g)
-        minQuantity = this.ingredient.quantity * 1000;
-        this.minQuantityUnit = 'g';
-        break;
-      case 'L':
-        // Converter para mililitros (1L = 1000mL)
-        minQuantity = this.ingredient.quantity * 1000;
-        this.minQuantityUnit = 'mL';
-        break;
-      case 'mg':
-        // Converter para gramas (1000mg = 1g)
-        minQuantity = this.ingredient.quantity / 1000;
-        this.minQuantityUnit = 'g';
-        break;
-      case 'mL':
-        // Converter para litros (1000mL = 1L)
-        minQuantity = this.ingredient.quantity / 1000;
-        this.minQuantityUnit = 'L';
-        break;
-      default:
-        // Para unidades como 'g', 'un', 'cx', 'pacote', usar a mesma unidade
-        minQuantity = this.ingredient.quantity;
-        this.minQuantityUnit = this.ingredient.unit;
-        break;
+    if (defaultPercentTrue) {
+      const qtyInMinUnit = this.ingredient.quantity * factorToMin;
+      const minQty = qtyInMinUnit * 0.15; // 15%
+      this.ingredient.minQuantity = Math.round(minQty * 100) / 100;
     }
+  }
 
-    // Arredondar para 2 casas decimais
-    this.ingredient.minQuantity = Math.round(minQuantity * 100) / 100;
+  private getMinUnitAndFactor(unit: string): { minUnit: string; factorToMin: number } {
+    switch (unit) {
+      case 'kg': return { minUnit: 'g', factorToMin: 1000 };
+      case 'L': return { minUnit: 'mL', factorToMin: 1000 };
+      case 'mg': return { minUnit: 'g', factorToMin: 0.001 };
+      case 'mL': return { minUnit: 'L', factorToMin: 0.001 };
+      default:   return { minUnit: unit, factorToMin: 1 };
+    }
   }
 }

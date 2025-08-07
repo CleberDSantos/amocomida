@@ -28,20 +28,75 @@
       <ion-card-title>Ingredientes</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <ion-item *ngFor="let ing of recipe.ingredients; let i = index" color="dark">
-        <ion-input placeholder="Ingrediente" [(ngModel)]="ing.name"></ion-input>
-        <ion-input type="number" placeholder="Qtd" [(ngModel)]="ing.quantity"></ion-input>
-        <ion-input placeholder="Unidade" [(ngModel)]="ing.unit"></ion-input>
-        <ion-input type="number" placeholder="Custo unitário" [(ngModel)]="ing.cost"></ion-input>
-        <ion-button (click)="removeIngredient(i)" color="danger" fill="clear">
-          <ion-icon name="trash"></ion-icon>
-        </ion-button>
+      <!-- Selecionar do estoque (abre picker + range) -->
+      <ion-item color="dark">
+        <ion-label position="stacked">Selecionar do Estoque</ion-label>
+        <ion-select interface="popover" placeholder="Escolha um ingrediente" (ionChange)="addIngredientFromStock($event.detail.value)">
+          <ion-select-option *ngFor="let item of availableIngredients" [value]="item">
+            {{ item.name }} ({{ item.quantity }} {{ item.unit }})
+          </ion-select-option>
+        </ion-select>
       </ion-item>
 
-      <ion-button (click)="addIngredient()" expand="block" fill="outline">
-        <ion-icon name="add"></ion-icon>
-        Adicionar Ingrediente
-      </ion-button>
+      <!-- Picker + Range para fracionar quantidade do ingrediente selecionado (sem escolha rápida) -->
+      <ion-card *ngIf="pickerOpen" color="dark">
+        <ion-card-header>
+          <ion-card-title>{{ selectedStockItem?.name }}</ion-card-title>
+          <ion-card-subtitle>Disponível: {{ selectedMax }} {{ selectedUnit }}</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <!-- ion-range maior para ajuste da quantidade (com unidade inteligente) -->
+          <ion-item lines="none" color="dark">
+            <ion-label position="stacked">Quantidade a usar</ion-label>
+            <ion-range
+              style="--bar-height: 14px; --knob-size: 28px;"
+              [min]="0"
+              [max]="selectedMax"
+              [step]="currentStep"
+              [snaps]="true"
+              [(ngModel)]="selectedQuantity">
+              <ion-label slot="start">0</ion-label>
+              <ion-label slot="end">{{ selectedQuantity }} {{ selectedUnit }}</ion-label>
+            </ion-range>
+
+            <!-- Rótulos de apoio para o range -->
+            <div class="range-labels" style="display:flex; justify-content:space-between; font-size: 12px; opacity: 0.8; margin-top: 6px;">
+              <span>0</span>
+              <span>{{ Math.round(selectedMax * 0.25) }}</span>
+              <span>{{ Math.round(selectedMax * 0.5) }}</span>
+              <span>{{ Math.round(selectedMax * 0.75) }}</span>
+              <span>{{ selectedMax }} {{ selectedUnit }}</span>
+            </div>
+          </ion-item>
+
+          <ion-button color="success" expand="block" (click)="confirmSelectedIngredient()" [disabled]="selectedQuantity === 0">
+            Confirmar ingrediente
+          </ion-button>
+          <ion-button color="medium" expand="block" fill="outline" (click)="cancelSelection()">
+            Cancelar
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Lista de ingredientes adicionados como ion-card -->
+      <ion-card *ngFor="let ing of recipe.ingredients; let i = index" color="dark">
+        <ion-card-header>
+          <ion-card-title>{{ ing.name }}</ion-card-title>
+          <ion-card-subtitle>
+            {{ ing.quantity }} {{ ing.unit }}
+            <ng-container *ngIf="ing.displayQuantity">
+              • {{ ing.displayQuantity }} {{ ing.displayUnit || ing.unit }}
+            </ng-container>
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-button (click)="removeIngredient(i)" fill="clear" slot="end">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Removido botão de adição manual conforme solicitado -->
     </ion-card-content>
   </ion-card>
 

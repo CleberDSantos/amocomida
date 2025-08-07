@@ -17,4 +17,7 @@ export interface Ingredient {
   quantity: number;
   unit: string;
   cost: number; // custo unitário
+  // Propriedades opcionais para exibição convertida (ex.: 150 g)
+  displayQuantity?: number;
+  displayUnit?: string;
 }
