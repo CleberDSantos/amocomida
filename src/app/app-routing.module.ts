@@ -41,6 +41,10 @@ const routes: Routes = [
     loadComponent: () => import('./pages/add-recipe/add-recipe.page').then(m => m.AddRecipePage)
   },
   {
+    path: 'add-ingredient',
+    loadComponent: () => import('./pages/add-ingredient/add-ingredient.page').then(m => m.AddIngredientPage)
+  },
+  {
     path: '',
     redirectTo: '/tabs/home',
     pathMatch: 'full'

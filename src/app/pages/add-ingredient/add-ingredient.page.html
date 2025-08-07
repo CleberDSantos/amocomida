@@ -1,0 +1,101 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Adicionar Ingrediente</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="saveIngredient()">
+        <ion-icon name="checkmark"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark" class="ion-padding">
+  <ion-list>
+    <!-- Nome do Ingrediente -->
+    <ion-item>
+      <ion-label position="stacked">Nome do Ingrediente</ion-label>
+      <ion-input
+        type="text"
+        [(ngModel)]="ingredient.name"
+        placeholder="Ex: Arroz"
+        required>
+      </ion-input>
+    </ion-item>
+
+    <!-- Categoria com Dropdown -->
+    <ion-item>
+      <ion-label position="stacked">Categoria</ion-label>
+      <ion-select
+        [(ngModel)]="ingredient.category"
+        placeholder="Selecione uma categoria"
+        interface="popover">
+        <ion-select-option *ngFor="let category of categories" [value]="category">
+          {{ category }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Unidade com Dropdown -->
+    <ion-item>
+      <ion-label position="stacked">Unidade</ion-label>
+      <ion-select
+        [(ngModel)]="ingredient.unit"
+        placeholder="Selecione uma unidade"
+        interface="popover">
+        <ion-select-option *ngFor="let unit of units" [value]="unit">
+          {{ unit }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Quantidade com Slide -->
+    <ion-item>
+      <ion-label position="stacked">Quantidade</ion-label>
+      <ion-range
+        min="0"
+        max="5000"
+        step="1"
+        [(ngModel)]="ingredient.quantity"
+        snaps="true">
+        <ion-label slot="end">{{ ingredient.quantity }} {{ ingredient.unit }}</ion-label>
+      </ion-range>
+    </ion-item>
+
+    <!-- Quantidade Mínima com Slide -->
+    <ion-item>
+      <ion-label position="stacked">Quantidade Mínima</ion-label>
+      <ion-range
+        min="0"
+        max="1000"
+        step="1"
+        [(ngModel)]="ingredient.minQuantity"
+        snaps="true">
+        <ion-label slot="end">{{ ingredient.minQuantity }} {{ ingredient.unit }}</ion-label>
+      </ion-range>
+    </ion-item>
+
+    <!-- Custo Unitário -->
+    <ion-item>
+      <ion-label position="stacked">Custo Unitário (R$)</ion-label>
+      <ion-input
+        type="number"
+        [(ngModel)]="ingredient.cost"
+        placeholder="0.00"
+        step="0.01">
+      </ion-input>
+    </ion-item>
+  </ion-list>
+
+  <!-- Botão de salvar -->
+  <ion-button
+    expand="block"
+    (click)="saveIngredient()"
+    [disabled]="!ingredient.name || !ingredient.category || !ingredient.unit || ingredient.minQuantity <= 0">
+    Salvar Ingrediente
+  </ion-button>
+</ion-content>

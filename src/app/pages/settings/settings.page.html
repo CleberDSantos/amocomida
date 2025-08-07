@@ -1,36 +1,84 @@
 <ion-header>
   <ion-toolbar color="dark">
-    <ion-title>Estoque de Ingredientes</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="addItem()">
-        <ion-icon name="add"></ion-icon>
-      </ion-button>
-    </ion-buttons>
+    <ion-title>Configurações</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content color="dark">
-  <ion-segment [(ngModel)]="selectedCategory" color="primary">
-    <ion-segment-button value="all">
-      <ion-label>Todos</ion-label>
-    </ion-segment-button>
-    <ion-segment-button *ngFor="let cat of categories" [value]="cat">
-      <ion-label>{{ cat }}</ion-label>
-    </ion-segment-button>
-  </ion-segment>
-
   <ion-list>
-    <ion-item *ngFor="let item of stockItems"
-              [hidden]="selectedCategory !== 'all' && item.category !== selectedCategory"
-              color="dark"
-              routerLink="/ingredient-detail/{{item.id}}">
-      <ion-label>
-        <h2>{{ item.name }}</h2>
-        <p>{{ item.category }}</p>
-      </ion-label>
-      <ion-note slot="end" [color]="item.quantity < item.minQuantity ? 'danger' : 'success'">
-        {{ item.quantity }} {{ item.unit }}
-      </ion-note>
+    <ion-item button (click)="showIngredients = true">
+      <ion-icon name="restaurant" slot="start"></ion-icon>
+      <ion-label>Ingredientes</ion-label>
+      <ion-icon name="chevron-forward" slot="end"></ion-icon>
+    </ion-item>
+
+    <ion-item button (click)="showProfile = true">
+      <ion-icon name="person" slot="start"></ion-icon>
+      <ion-label>Perfil</ion-label>
+      <ion-icon name="chevron-forward" slot="end"></ion-icon>
+    </ion-item>
+
+    <ion-item button (click)="logout()">
+      <ion-icon name="log-out" slot="start"></ion-icon>
+      <ion-label>Sair</ion-label>
+      <ion-icon name="chevron-forward" slot="end"></ion-icon>
     </ion-item>
   </ion-list>
+
+  <!-- Seção de Ingredientes -->
+  <div *ngIf="showIngredients">
+    <ion-toolbar color="dark">
+      <ion-title>Ingredientes</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="navigateToAddIngredient()">
+          <ion-icon name="add"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+
+    <ion-segment [(ngModel)]="selectedCategory" color="primary">
+      <ion-segment-button value="all">
+        <ion-label>Todos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button *ngFor="let cat of categories" [value]="cat">
+        <ion-label>{{ cat }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <ion-list>
+      <ion-item *ngFor="let item of stockItems"
+                [hidden]="selectedCategory !== 'all' && item.category !== selectedCategory"
+                color="dark"
+                routerLink="/ingredient-detail/{{item.id}}">
+        <ion-label>
+          <h2>{{ item.name }}</h2>
+          <p>{{ item.category }}</p>
+        </ion-label>
+        <ion-note slot="end" [color]="item.quantity < item.minQuantity ? 'danger' : 'success'">
+          {{ item.quantity }} {{ item.unit }}
+        </ion-note>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- Seção de Perfil -->
+  <div *ngIf="showProfile">
+    <ion-toolbar color="dark">
+      <ion-title>Perfil</ion-title>
+    </ion-toolbar>
+    <ion-list>
+      <ion-item>
+        <ion-label>
+          <h2>Nome do Usuário</h2>
+          <p>usuario@exemplo.com</p>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>
+          <h2>Configurações da Conta</h2>
+          <p>Gerenciar suas preferências</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
 </ion-content>
