@@ -1,0 +1,66 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Nova Receita</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark">
+  <ion-item color="dark">
+    <ion-label position="floating">Nome da Receita</ion-label>
+    <ion-input [(ngModel)]="recipe.name"></ion-input>
+  </ion-item>
+
+  <ion-item color="dark">
+    <ion-label position="floating">Descrição</ion-label>
+    <ion-textarea [(ngModel)]="recipe.description"></ion-textarea>
+  </ion-item>
+
+  <ion-item color="dark">
+    <ion-label>Foto</ion-label>
+    <ion-button (click)="takePicture()" fill="outline">
+      <ion-icon name="camera"></ion-icon>
+      Tirar Foto
+    </ion-button>
+  </ion-item>
+
+  <ion-card color="dark">
+    <ion-card-header>
+      <ion-card-title>Ingredientes</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item *ngFor="let ing of recipe.ingredients; let i = index" color="dark">
+        <ion-input placeholder="Ingrediente" [(ngModel)]="ing.name"></ion-input>
+        <ion-input type="number" placeholder="Qtd" [(ngModel)]="ing.quantity"></ion-input>
+        <ion-input placeholder="Unidade" [(ngModel)]="ing.unit"></ion-input>
+        <ion-input type="number" placeholder="Custo unitário" [(ngModel)]="ing.cost"></ion-input>
+        <ion-button (click)="removeIngredient(i)" color="danger" fill="clear">
+          <ion-icon name="trash"></ion-icon>
+        </ion-button>
+      </ion-item>
+
+      <ion-button (click)="addIngredient()" expand="block" fill="outline">
+        <ion-icon name="add"></ion-icon>
+        Adicionar Ingrediente
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-item color="dark">
+    <ion-label position="floating">Número de Porções</ion-label>
+    <ion-input type="number" [(ngModel)]="recipe.portions"></ion-input>
+  </ion-item>
+
+  <ion-item color="dark">
+    <ion-label position="floating">Tamanho da Porção (gramas)</ion-label>
+    <ion-input type="number" [(ngModel)]="recipe.portionSize"></ion-input>
+  </ion-item>
+
+  <ion-item color="dark">
+    <ion-label position="floating">Anotações</ion-label>
+    <ion-textarea [(ngModel)]="recipe.notes"></ion-textarea>
+  </ion-item>
+
+  <ion-button (click)="saveRecipe()" expand="block" color="primary">
+    Salvar Receita
+  </ion-button>
+</ion-content>

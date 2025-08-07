@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { Camera, CameraResultType } from '@capacitor/camera';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController, AlertController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { Recipe } from 'src/app/models/recipe.model';
 import { RecipeService } from 'src/app/services/recipe.service';
 
@@ -32,7 +32,12 @@ export class AddRecipePage {
     notes: ''
   };
 
-  constructor(private recipeService: RecipeService) {}
+  constructor(
+    private recipeService: RecipeService,
+    private router: Router,
+    private navCtrl: NavController,
+    private alertController: AlertController
+  ) {}
 
   addIngredient() {
     this.recipe.ingredients.push({
@@ -49,17 +54,49 @@ export class AddRecipePage {
   }
 
   async takePicture() {
-    const image = await Camera.getPhoto({
-      quality: 90,
-      allowEditing: false,
-      resultType: CameraResultType.Uri
-    });
-    this.recipe.image = image.webPath;
+    try {
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri
+      });
+      this.recipe.image = image.webPath;
+    } catch (error) {
+      console.error('Erro ao capturar foto:', error);
+    }
   }
 
   async saveRecipe() {
+    if (!this.recipe.name || !this.recipe.description) {
+      const alert = await this.alertController.create({
+        header: 'Campos obrigatórios',
+        message: 'Por favor, preencha o nome e a descrição da receita.',
+        buttons: ['OK']
+      });
+      await alert.present();
+      return;
+    }
+
+    if (this.recipe.ingredients.length === 0) {
+      const alert = await this.alertController.create({
+        header: 'Ingredientes necessários',
+        message: 'Adicione pelo menos um ingrediente à receita.',
+        buttons: ['OK']
+      });
+      await alert.present();
+      return;
+    }
+
     this.recipe.id = Math.random().toString(36).substring(7);
     await this.recipeService.addRecipe(this.recipe);
-    // Navegar de volta para a lista de receitas
+    
+    const alert = await this.alertController.create({
+      header: 'Sucesso!',
+      message: 'Receita adicionada com sucesso!',
+      buttons: ['OK']
+    });
+    await alert.present();
+    
+    await this.router.navigate(['/tabs/recipes']);
   }
 }

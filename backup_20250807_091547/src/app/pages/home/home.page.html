@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-title>Feed</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark">
+  <div class="feed-container">
+    <ion-card *ngFor="let recipe of recipes" color="dark" routerLink="/recipe-detail/{{recipe.id}}">
+      <ion-img [src]="recipe.image"></ion-img>
+      <ion-card-header>
+        <ion-card-title>{{ recipe.name }}</ion-card-title>
+        <ion-card-subtitle>Preparado em: {{ recipe.preparedAt | date:'medium' }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ recipe.description }}</p>
+        <p><strong>{{ recipe.portions }} porções de {{ recipe.portionSize }}g</strong></p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

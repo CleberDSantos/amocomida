@@ -1,0 +1,19 @@
+:root {
+  --ion-color-dark: #1f1f1f;
+  --ion-color-dark-rgb: 31, 31, 31;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #1a1a1a;
+  --ion-color-dark-tint: #333333;
+
+  --ion-background-color: #121212;
+  --ion-background-color-rgb: 18, 18, 18;
+  --ion-text-color: #ffffff;
+  --ion-text-color-rgb: 255, 255, 255;
+  --ion-border-color: #333333;
+}
+
+body {
+  background-color: var(--ion-background-color);
+  color: var(--ion-text-color);
+}
