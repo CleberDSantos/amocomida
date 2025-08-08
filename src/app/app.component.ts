@@ -9,7 +9,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, RouterOutlet]
+  imports: [IonicModule, CommonModule]
 })
 export class AppComponent implements OnInit {
   constructor(private platform: Platform) {}
