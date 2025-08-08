@@ -20,10 +20,17 @@ import { RecipeService } from 'src/app/services/recipe.service';
 })
 export class RecipesPage implements OnInit {
   recipes: Recipe[] = [];
+  loading = true;
 
   constructor(private recipeService: RecipeService) {}
 
   async ngOnInit() {
-    this.recipes = await this.recipeService.getRecipes();
+    try {
+      this.recipes = await this.recipeService.getRecipes();
+    } catch (error) {
+      console.error('Erro ao carregar receitas:', error);
+    } finally {
+      this.loading = false;
+    }
   }
 }

@@ -25,7 +25,7 @@ export class AddIngredientPage implements OnInit {
   loading = false;
   categories: string[] = [];
   nameError = '';
-  
+
   units: UnitOption[] = [
     { value: 'g', label: 'Gramas', icon: 'scale-outline' },
     { value: 'kg', label: 'Quilos', icon: 'barbell-outline', factor: 1000 },
@@ -80,7 +80,7 @@ export class AddIngredientPage implements OnInit {
 
   validateName(event: any) {
     const value = event.detail.value?.trim() || '';
-    
+
     if (!value) {
       this.nameError = 'Nome é obrigatório';
     } else if (value.length < 2) {
@@ -154,7 +154,7 @@ export class AddIngredientPage implements OnInit {
 
   private updateMinQuantity() {
     if (!this.ingredient.quantity) return;
-    
+
     const defaultMin = Math.max(1, this.ingredient.quantity * 0.15);
     if (this.ingredient.minQuantity === 0) {
       this.ingredient.minQuantity = Math.round(defaultMin * 100) / 100;
@@ -231,14 +231,14 @@ export class AddIngredientPage implements OnInit {
       this.ingredient.lastUpdated = new Date();
 
       await this.stockService.updateStock(this.ingredient);
-      
+
       this.haptic.success();
       this.showToast('Ingrediente salvo com sucesso!', 'success');
-      
+
       setTimeout(() => {
         this.navCtrl.back();
       }, 500);
-      
+
     } catch (error) {
       console.error('Erro ao salvar:', error);
       this.haptic.error();
@@ -257,7 +257,7 @@ export class AddIngredientPage implements OnInit {
     const toast = await this.toastCtrl.create({
       message,
       color,
-      duration: 2000,
+      duration: 3500,
       position: 'top',
       buttons: [{ icon: 'close', role: 'cancel' }]
     });

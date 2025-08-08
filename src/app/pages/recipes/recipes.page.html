@@ -2,7 +2,7 @@
   <ion-toolbar color="dark">
     <ion-title>Receitas</ion-title>
     <ion-buttons slot="end">
-      <ion-button routerLink="/add-recipe">
+      <ion-button routerLink="/add-recipe-wizard">
         <ion-icon name="add"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -10,15 +10,41 @@
 </ion-header>
 
 <ion-content color="dark">
-  <ion-card *ngFor="let recipe of recipes" color="dark" routerLink="/recipe-detail/{{recipe.id}}">
-    <ion-img [src]="recipe.image"></ion-img>
-    <ion-card-header>
-      <ion-card-title>{{ recipe.name }}</ion-card-title>
-      <ion-card-subtitle>{{ recipe.createdAt | date:'medium' }}</ion-card-subtitle>
-    </ion-card-header>
-    <ion-card-content>
-      <p>{{ recipe.description }}</p>
-      <p><strong>{{ recipe.portions }} porções</strong></p>
-    </ion-card-content>
-  </ion-card>
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Carregando receitas...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && recipes.length === 0" class="empty-state">
+    <ion-icon name="restaurant-outline" size="large" color="medium"></ion-icon>
+    <h2>Nenhuma receita encontrada</h2>
+    <p>Comece criando sua primeira receita!</p>
+    <div class="empty-actions">
+      <ion-button fill="solid" color="primary" routerLink="/add-recipe-wizard">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Criar Receita
+      </ion-button>
+      <ion-button fill="outline" routerLink="/tabs/home">
+        <ion-icon name="home" slot="start"></ion-icon>
+        Explorar Receitas
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Recipes List -->
+  <div *ngIf="!loading && recipes.length > 0">
+    <ion-card *ngFor="let recipe of recipes" color="dark" routerLink="/recipe-detail/{{recipe.id}}">
+      <ion-img [src]="recipe.image"></ion-img>
+      <ion-card-header>
+        <ion-card-title>{{ recipe.name }}</ion-card-title>
+        <ion-card-subtitle>{{ recipe.createdAt | date:'medium' }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ recipe.description }}</p>
+        <p><strong>{{ recipe.portions }} porções</strong></p>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

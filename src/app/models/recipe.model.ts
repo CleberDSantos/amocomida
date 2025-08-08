@@ -9,6 +9,8 @@ export interface Recipe {
   createdAt: Date;
   notes: string;
   preparedAt?: Date; // Data em que foi preparada (para o feed)
+  preparation?: string; // Modo de preparo
+  prepTime?: number; // Tempo de preparo em minutos
 }
 
 export interface Ingredient {

@@ -7,6 +7,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { Recipe } from 'src/app/models/recipe.model';
 import { RecipeService } from 'src/app/services/recipe.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { SkeletonLoaderComponent } from 'src/app/components/skeleton-loader/skeleton-loader.component';
 
 interface RecipeWithInteractions extends Recipe {
   liked?: boolean;
@@ -31,7 +32,7 @@ interface Category {
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, RouterModule]
+  imports: [IonicModule, CommonModule, FormsModule, RouterModule, SkeletonLoaderComponent]
 })
 export class HomePage implements OnInit, OnDestroy {
 
@@ -48,6 +49,9 @@ export class HomePage implements OnInit, OnDestroy {
   currentPage = 0;
   pageSize = 10;
   searchTerm = '';
+
+  // View selector
+  homeView = 'feed'; // 'feed' ou 'discover'
 
   // Configuração do slider (removido - usando carrossel horizontal simples)
   slideOpts = null;
@@ -259,6 +263,26 @@ export class HomePage implements OnInit, OnDestroy {
       recipe.description.toLowerCase().includes(term) ||
       recipe.ingredients.some(ing => ing.name.toLowerCase().includes(term))
     );
+  }
+
+  onViewChange(event: any) {
+    const view = event.detail.value;
+    this.homeView = view;
+
+    // Resetar busca ao mudar de view
+    if (this.searchTerm) {
+      this.searchTerm = '';
+      this.setupFeaturedAndTopRecipes();
+    }
+
+    // Aqui você pode adicionar lógica específica para cada view
+    if (view === 'discover') {
+      // Carregar conteúdo específico para descobrir
+      console.log('Mudou para view de descoberta');
+    } else {
+      // Carregar conteúdo específico para feed
+      console.log('Mudou para view de feed');
+    }
   }
 
   async toggleFavorite(recipe: RecipeWithInteractions, event: Event) {

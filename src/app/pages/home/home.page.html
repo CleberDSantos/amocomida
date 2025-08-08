@@ -31,6 +31,17 @@
     </ion-button>
   </div>
 
+  <div class="view-selector">
+    <ion-segment [(ngModel)]="homeView" (ionChange)="onViewChange($event)" mode="ios">
+      <ion-segment-button value="feed">
+        <ion-label>Feed</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="discover">
+        <ion-label>Descobrir</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)" pull-factor="0.5">
     <ion-refresher-content
       pulling-text="Puxe para atualizar..."
@@ -40,8 +51,10 @@
 
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-container">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Carregando receitas...</p>
+    <!-- Skeleton Cards -->
+    <div class="skeleton-recipes">
+      <app-skeleton-loader isCard="true" *ngFor="let i of [1,2,3,4,6,7,8]"></app-skeleton-loader>
+    </div>
   </div>
 
   <!-- Main Content -->

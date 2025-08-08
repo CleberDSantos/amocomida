@@ -1,0 +1,433 @@
+<ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()" fill="clear">
+        <ion-icon name="arrow-back" size="large"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Nova Receita</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="saveRecipe()" fill="clear" [disabled]="!isCurrentStepValid()">
+        <ion-icon name="checkmark" size="large" [color]="isCurrentStepValid() ? 'success' : 'medium'"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content color="dark">
+  <!-- Progress Indicator -->
+  <div class="progress-container">
+    <div class="progress-steps">
+      <div
+        *ngFor="let step of steps; let i = index"
+        class="step"
+        [class.active]="currentStep === i"
+        [class.completed]="step.isComplete"
+        [class.disabled]="i > currentStep">
+        <div class="step-number">{{ i + 1 }}</div>
+        <div class="step-label">{{ step.title }}</div>
+      </div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width]="getProgressPercentage() + '%'"></div>
+    </div>
+  </div>
+
+  <!-- Step Content -->
+  <div class="step-content">
+    <!-- Step 1: Informações Básicas -->
+    <div *ngIf="currentStep === 0" class="step-panel">
+      <ion-card color="dark" class="info-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="information-circle-outline" color="primary"></ion-icon>
+            Informações da Receita
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item color="dark" lines="none">
+            <ion-label position="floating">Nome da Receita *</ion-label>
+            <ion-input [(ngModel)]="recipe.name" placeholder="Ex: Macarrão à Bolonhesa"></ion-input>
+          </ion-item>
+
+          <ion-item color="dark" lines="none">
+            <ion-label position="floating">Descrição *</ion-label>
+            <ion-textarea [(ngModel)]="recipe.description" placeholder="Descreva sua receita..."></ion-textarea>
+          </ion-item>
+
+          <ion-item color="dark" lines="none">
+            <ion-label>Foto da Receita</ion-label>
+            <ion-button (click)="takePicture()" fill="outline" slot="end">
+              <ion-icon name="camera" slot="start"></ion-icon>
+              Foto
+            </ion-button>
+          </ion-item>
+
+          <div class="recipe-params">
+            <ion-item color="dark" lines="none">
+              <ion-icon name="people-outline" slot="start" color="primary"></ion-icon>
+              <ion-label position="floating">Porções *</ion-label>
+              <ion-input type="number" [(ngModel)]="recipe.portions" min="1"></ion-input>
+            </ion-item>
+
+            <ion-item color="dark" lines="none">
+              <ion-icon name="scale-outline" slot="start" color="primary"></ion-icon>
+              <ion-label position="floating">Tamanho da Porção (g) *</ion-label>
+              <ion-input type="number" [(ngModel)]="recipe.portionSize" min="1"></ion-input>
+            </ion-item>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Step 2: Ingredientes -->
+    <div *ngIf="currentStep === 1" class="step-panel">
+      <ion-card color="dark" class="ingredients-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="restaurant-outline" color="success"></ion-icon>
+            Ingredientes ({{ recipe.ingredients.length }})
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+
+          <!-- Seletor de ingredientes do estoque -->
+          <ion-item color="dark" class="ingredient-selector" lines="none">
+            <ion-icon name="add-circle-outline" slot="start" color="primary"></ion-icon>
+            <ion-label position="stacked">Selecionar do Estoque</ion-label>
+            <ion-select
+              interface="popover"
+              placeholder="Escolha um ingrediente"
+              (ionChange)="selectIngredientFromStock($event.detail.value)"
+              class="ingredient-select">
+
+              <ion-select-option
+                *ngFor="let item of availableIngredients"
+                [value]="item"
+                [disabled]="item.quantity <= 0">
+
+                <div class="ingredient-option">
+                  <div class="ingredient-name">{{ item.name }}</div>
+                  <div class="ingredient-stock">
+                    <span class="stock-text">{{ item.quantity }} {{ item.unit }} disponível</span>
+                  </div>
+                </div>
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <!-- Seletor de quantidade com progress bar -->
+          <ion-card *ngIf="pickerOpen" color="dark" class="quantity-picker">
+            <ion-card-header>
+              <div class="picker-header">
+                <div class="ingredient-info">
+                  <h3>{{ selectedStockItem?.name }}</h3>
+                  <p class="stock-category">{{ selectedStockItem?.category }}</p>
+                </div>
+                <ion-chip [color]="getStockHealthColor(selectedStockItem!)">
+                  <ion-icon [name]="getStockHealthIcon(selectedStockItem!)" size="small"></ion-icon>
+                  <ion-label>{{ getStockHealthText(selectedStockItem!) }}</ion-label>
+                </ion-chip>
+              </div>
+
+              <!-- Progress bar do estoque -->
+              <div class="stock-progress">
+                <div class="progress-info">
+                  <span>Estoque Disponível</span>
+                  <span class="stock-value">{{ selectedStockItem?.quantity }} {{ selectedStockItem?.unit }}</span>
+                </div>
+                <ion-progress-bar
+                  [value]="getStockProgress(selectedStockItem!)"
+                  [color]="getStockProgressColor(selectedStockItem!)">
+                </ion-progress-bar>
+                <div class="progress-labels">
+                  <span>0</span>
+                  <span class="min-label">Mín: {{ selectedStockItem?.minQuantity }}</span>
+                  <span>Max</span>
+                </div>
+              </div>
+            </ion-card-header>
+
+            <ion-card-content>
+              <!-- Controle de quantidade com feedback visual -->
+              <div class="quantity-control">
+                <ion-item lines="none" color="dark">
+                  <ion-label position="stacked">
+                    Quantidade a Usar
+                    <span class="quantity-hint">({{ getQuantityPercentage() }}% do estoque)</span>
+                  </ion-label>
+
+                  <div class="quantity-input-group">
+                    <ion-button
+                      fill="outline"
+                      size="small"
+                      (click)="decreaseQuantity()"
+                      [disabled]="selectedQuantity <= 0">
+                      <ion-icon name="remove" slot="icon-only"></ion-icon>
+                    </ion-button>
+
+                    <ion-input
+                      type="number"
+                      [(ngModel)]="selectedQuantity"
+                      [max]="selectedMax"
+                      [min]="0"
+                      [step]="currentStep"
+                      class="quantity-input"
+                      (ionInput)="onQuantityChange($event)">
+                    </ion-input>
+
+                    <ion-button
+                      fill="outline"
+                      size="small"
+                      (click)="increaseQuantity()"
+                      [disabled]="selectedQuantity >= selectedMax">
+                      <ion-icon name="add" slot="icon-only"></ion-icon>
+                    </ion-button>
+
+                    <span class="unit-label">{{ selectedUnit }}</span>
+                  </div>
+                </ion-item>
+
+                <!-- Range slider melhorado -->
+                <ion-range
+                  [(ngModel)]="selectedQuantity"
+                  [min]="0"
+                  [max]="selectedMax"
+                  [step]="currentStep"
+                  [snaps]="true"
+                  [color]="getQuantityRangeColor()"
+                  class="quantity-range">
+                  <ion-label slot="start">0</ion-label>
+                  <ion-label slot="end">{{ selectedMax }}</ion-label>
+                </ion-range>
+
+                <!-- Alertas de estoque -->
+                <ion-item
+                  *ngIf="selectedQuantity > selectedStockItem?.minQuantity! && selectedQuantity < selectedMax * 0.8"
+                  lines="none"
+                  color="dark">
+                  <ion-icon name="warning-outline" color="warning" slot="start"></ion-icon>
+                  <ion-label color="warning">
+                    <small>Atenção: Restará {{ (selectedMax - selectedQuantity).toFixed(2) }} {{ selectedUnit }} no estoque</small>
+                  </ion-label>
+                </ion-item>
+
+                <ion-item
+                  *ngIf="selectedQuantity > selectedMax * 0.8"
+                  lines="none"
+                  color="dark">
+                  <ion-icon name="alert-circle-outline" color="danger" slot="start"></ion-icon>
+                  <ion-label color="danger">
+                    <small>Cuidado: Estoque ficará muito baixo!</small>
+                  </ion-label>
+                </ion-item>
+
+                <ion-item
+                  *ngIf="selectedQuantity === 0"
+                  lines="none"
+                  color="dark">
+                  <ion-icon name="information-circle-outline" color="medium" slot="start"></ion-icon>
+                  <ion-label color="medium">
+                    <small>Selecione a quantidade que deseja usar</small>
+                  </ion-label>
+                </ion-item>
+              </div>
+
+              <!-- Botões de ação -->
+              <div class="picker-actions">
+                <ion-button
+                  fill="clear"
+                  size="default"
+                  (click)="cancelSelection()"
+                  class="cancel-btn">
+                  <ion-icon name="close" slot="start"></ion-icon>
+                  Cancelar
+                </ion-button>
+
+                <ion-button
+                  fill="solid"
+                  size="default"
+                  color="success"
+                  (click)="confirmSelectedIngredient()"
+                  [disabled]="selectedQuantity === 0 || selectedQuantity > selectedMax"
+                  class="confirm-btn">
+                  <ion-icon name="checkmark" slot="start"></ion-icon>
+                  Confirmar
+                </ion-button>
+              </div>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Lista de ingredientes adicionados -->
+          <div class="added-ingredients" *ngIf="recipe.ingredients.length > 0">
+            <h4 class="ingredients-title">
+              <ion-icon name="list-outline" color="primary"></ion-icon>
+              Ingredientes Selecionados
+            </h4>
+
+            <ion-card
+              *ngFor="let ing of recipe.ingredients; let i = index"
+              color="dark"
+              class="ingredient-card">
+              <ion-card-content>
+                <div class="ingredient-item">
+                  <div class="ingredient-details">
+                    <h4>{{ ing.name }}</h4>
+                    <div class="ingredient-quantity">
+                      <ion-chip color="primary" outline>
+                        <ion-icon name="scale-outline" size="small"></ion-icon>
+                        <ion-label>{{ ing.quantity }} {{ ing.unit }}</ion-label>
+                      </ion-chip>
+                      <ion-chip
+                        *ngIf="ing.displayQuantity && ing.displayUnit !== ing.unit"
+                        color="secondary"
+                        outline>
+                        <ion-icon name="swap-horizontal-outline" size="small"></ion-icon>
+                        <ion-label>{{ ing.displayQuantity }} {{ ing.displayUnit }}</ion-label>
+                      </ion-chip>
+                    </div>
+                    <p class="ingredient-cost">
+                      <ion-icon name="card-outline" size="small"></ion-icon>
+                      R$ {{ (ing.quantity * ing.cost).toFixed(2) }}
+                    </p>
+                  </div>
+
+                  <ion-button
+                    fill="clear"
+                    color="danger"
+                    (click)="removeIngredient(i)"
+                    class="remove-btn">
+                    <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </div>
+
+          <!-- Estado vazio -->
+          <div *ngIf="recipe.ingredients.length === 0" class="empty-ingredients">
+            <ion-icon name="restaurant-outline" size="large" color="medium"></ion-icon>
+            <p>Nenhum ingrediente selecionado</p>
+            <p class="empty-hint">Escolha ingredientes do seu estoque acima</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Step 3: Preparo -->
+    <div *ngIf="currentStep === 2" class="step-panel">
+      <ion-card color="dark" class="preparation-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="restaurant-outline" color="warning"></ion-icon>
+            Modo de Preparo
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item color="dark" lines="none">
+            <ion-label position="stacked">Passo a Passo *</ion-label>
+            <ion-textarea
+              [(ngModel)]="recipe.preparation"
+              placeholder="Descreva o modo de preparo passo a passo..."
+              rows="8">
+            </ion-textarea>
+          </ion-item>
+
+          <ion-item color="dark" lines="none">
+            <ion-label position="stacked">Tempo de Preparo (minutos)</ion-label>
+            <ion-input type="number" [(ngModel)]="recipe.prepTime" min="1" placeholder="Ex: 30"></ion-input>
+          </ion-item>
+
+          <ion-item color="dark" lines="none">
+            <ion-label position="stacked">Dicas e Observações</ion-label>
+            <ion-textarea
+              [(ngModel)]="recipe.notes"
+              placeholder="Dicas especiais, variações, substituições..."
+              rows="4">
+            </ion-textarea>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Step 4: Revisão -->
+    <div *ngIf="currentStep === 3" class="step-panel">
+      <ion-card color="dark" class="review-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+            Revisar Receita
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="review-section">
+            <h3>Informações da Receita</h3>
+            <div class="review-item">
+              <span class="label">Nome:</span>
+              <span class="value">{{ recipe.name }}</span>
+            </div>
+            <div class="review-item">
+              <span class="label">Descrição:</span>
+              <span class="value">{{ recipe.description }}</span>
+            </div>
+            <div class="review-item">
+              <span class="label">Porções:</span>
+              <span class="value">{{ recipe.portions }}</span>
+            </div>
+            <div class="review-item">
+              <span class="label">Tamanho da Porção:</span>
+              <span class="value">{{ recipe.portionSize }}g</span>
+            </div>
+            <div class="review-item">
+              <span class="label">Tempo de Preparo:</span>
+              <span class="value">{{ recipe.prepTime || 'Não informado' }} minutos</span>
+            </div>
+          </div>
+
+          <div class="review-section">
+            <h3>Ingredientes</h3>
+            <div class="ingredients-list">
+              <div *ngFor="let ing of recipe.ingredients" class="ingredient-review">
+                <span class="ingredient-name">{{ ing.name }}</span>
+                <span class="ingredient-quantity">{{ ing.quantity }} {{ ing.unit }}</span>
+                <span class="ingredient-cost">R$ {{ (ing.quantity * ing.cost).toFixed(2) }}</span>
+              </div>
+            </div>
+            <div class="total-cost">
+              <strong>Custo Total: R$ {{ getTotalCost().toFixed(2) }}</strong>
+              <strong>Custo por Porção: R$ {{ getCostPerPortion().toFixed(2) }}</strong>
+            </div>
+          </div>
+
+          <div class="review-section">
+            <h3>Modo de Preparo</h3>
+            <p class="preparation-text">{{ recipe.preparation || 'Não informado' }}</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="navigation-buttons">
+    <ion-button
+      fill="outline"
+      (click)="previousStep()"
+      [disabled]="currentStep === 0"
+      class="prev-btn">
+      <ion-icon name="arrow-back" slot="start"></ion-icon>
+      Anterior
+    </ion-button>
+
+    <ion-button
+      fill="solid"
+      color="primary"
+      (click)="nextStep()"
+      *ngIf="currentStep < steps.length - 1"
+      [disabled]="!isCurrentStepValid()"
+      class="next-btn">
+      Próximo
+      <ion-icon name="arrow-forward" slot="end"></ion-icon>
+    </ion-button>
+  </div>
+</ion-content>
